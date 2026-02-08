@@ -126,17 +126,3 @@ public class OrderPage {
         return modalText.contains("Заказ оформлен") || modalText.contains("Номер заказа");
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
