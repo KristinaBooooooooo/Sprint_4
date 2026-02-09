@@ -1,67 +1,65 @@
 package ru.practikum.kristinabogatova.pageobject;
 
-import org.openqa.selenium.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
 import java.util.List;
 
-public class MainPage {
+public abstract class MainPage {
 
-    private WebDriver driver;
-    private WebDriverWait wait;
+    private static final String CHROME = "chrome";
+    private static final String FIREFOX = "firefox";
 
-    // Кнопки заказа
-    private By topOrderButton = By.xpath("//div[contains(@class,'Header_Nav')]//button[text()='Заказать']");
-    private By bottomOrderButton = By.xpath("//div[contains(@class,'Home_FinishButton')]//button[text()='Заказать']");
-    private By cookieButton = By.id("rcc-confirm-button");
+    // Кнопки и элементы
+    private final By cookieButton = By.id("rcc-confirm-button");
 
-    // FAQ элементы
-    private By faqQuestions = By.cssSelector("div.accordion__button");
-    private By faqAnswers = By.cssSelector("div.accordion__panel p");
+    protected final WebDriver driver;
+    protected final WebDriverWait wait;
 
-    public MainPage(WebDriver driver) {
-        this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+    // Конструктор
+    public MainPage(String browser, Duration timeout) {
+        this.driver = createDriver(browser);
+        this.wait = new WebDriverWait(driver, timeout);
     }
 
-    public void clickTopOrderButton() {
-        acceptCookies();
-        driver.findElement(topOrderButton).click();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//div[contains(@class,'Order_Header')]")
-        ));
+    public void openHomePage() {
+        driver.get("https://qa-scooter.praktikum-services.ru/");
     }
 
-    public void clickBottomOrderButton() {
-        acceptCookies();
-        WebElement button = driver.findElement(bottomOrderButton);
-        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", button);
-        wait.until(ExpectedConditions.elementToBeClickable(button));
-        button.click();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//div[contains(@class,'Order_Header')]")
-        ));
-    }
-
-    private void acceptCookies() {
-
-        List<WebElement> cookieButtons = driver.findElements(cookieButton);
-        if (!cookieButtons.isEmpty() && cookieButtons.get(0).isDisplayed()) {
-            cookieButtons.get(0).click();
+    // Куки
+    public void acceptCookies() {
+        List<WebElement> cookies = driver.findElements(cookieButton);
+        if (!cookies.isEmpty() && cookies.get(0).isDisplayed()) {
+            cookies.get(0).click();
+            wait.until(ExpectedConditions.invisibilityOfElementLocated(cookieButton));
         }
     }
 
-    // Методы для FAQ теста
-    public void openFaqItem(int index) {
-        List<WebElement> questions = driver.findElements(faqQuestions);
-        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", questions.get(index));
-        questions.get(index).click();
+    // Метод для скролла
+    public void scrollToElement(WebElement element) {
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", element);
     }
 
-    public String getFaqAnswer(int index) {
-        List<WebElement> answers = driver.findElements(faqAnswers);
-        return answers.get(index).getText();
+    public void close() {
+        if (driver != null) {
+            driver.quit();
+        }
+    }
+
+    private WebDriver createDriver(String browser) {
+        if (CHROME.equals(browser)) {
+            return new ChromeDriver();
+        } else if (FIREFOX.equals(browser)) {
+            return new FirefoxDriver();
+        } else {
+            throw new RuntimeException("Не найден подходящий драйвер");
+        }
     }
 }

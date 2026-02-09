@@ -3,13 +3,8 @@ package tests;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import ru.practikum.kristinabogatova.pageobject.MainPage;
 import ru.practikum.kristinabogatova.pageobject.OrderPage;
 
-import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 
@@ -21,8 +16,6 @@ public class OrderTest {
     private static final String TOP = "top";
     private static final String BOTTOM = "bottom";
 
-    private WebDriver driver;
-    private MainPage mainPage;
     private OrderPage orderPage;
 
     @Parameterized.Parameter(0) public String browser;
@@ -66,56 +59,34 @@ public class OrderTest {
 
     @Before
     public void setUp() {
-        driver = getDriver(browser);
-        driver.manage().window().maximize();
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
-        driver.get("https://qa-scooter.praktikum-services.ru/");
-
-        mainPage = new MainPage(driver);
-        orderPage = new OrderPage(driver);
+        // передаём браузер строкой
+        orderPage = new OrderPage(browser);
+        orderPage.openHomePage();
+        orderPage.acceptCookies();
     }
 
     @Test
     public void orderShouldBeCreatedSuccessfully() {
-        // Кликаем кнопку заказа
+        //  Шаг 1: выбираем кнопку заказа
         if (TOP.equals(buttonType)) {
-            mainPage.clickTopOrderButton();
+            orderPage.clickTopOrderButton();
         } else {
-            mainPage.clickBottomOrderButton();
+            orderPage.clickBottomOrderButton();
         }
 
-        // Первый шаг
+        // Шаг 2: Заполняем первый шаг заказа
         orderPage.fillFirstStep(name, surname, address, phone);
+        Assert.assertTrue("Второй шаг заказа не открылся", orderPage.isSecondStepOpened());
 
-        // Проверяем второй шаг
-        boolean secondStepOpened = orderPage.isSecondStepOpened();
-        Assert.assertTrue("Второй шаг заказа не открылся", secondStepOpened);
-
-        // Второй шаг
+        // Шаг 3: Заполняем второй шаг
         orderPage.fillSecondStep(date, rent, color, comment);
 
-        // Проверяем успешное оформление
-        boolean successVisible = orderPage.isOrderSuccessVisible();
-        if (CHROME.equals(browser) && !successVisible) {
-            System.out.println("ВНИМАНИЕ: БАГ В CHROME! Окно успеха не появилось");
-        }
-        Assert.assertTrue("Окно успешного создания заказа не появилось", successVisible);
+        // Проверка успешного оформления
+        Assert.assertTrue("Окно успешного создания заказа не появилось", orderPage.isOrderSuccessVisible());
     }
 
     @After
     public void tearDown() {
-        if (driver != null) {
-            driver.quit();
-        }
-    }
-
-    private WebDriver getDriver(String browser) {
-        if (CHROME.equals(browser)) {
-            return new ChromeDriver();
-        } else if (FIREFOX.equals(browser)) {
-            return new FirefoxDriver();
-        } else {
-            throw new RuntimeException("Не найден подходящий драйвер");
-        }
+        orderPage.close();
     }
 }
