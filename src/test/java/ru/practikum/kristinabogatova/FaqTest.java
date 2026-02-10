@@ -1,20 +1,21 @@
-package tests;
+package ru.practikum.kristinabogatova;
 
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import ru.practikum.kristinabogatova.pageobject.FaqPage;
+import ru.practikum.kristinabogatova.utils.WebDriverUtils;
+import ru.practikum.kristinabogatova.pageobject.MainPage;
 
 import java.util.Collection;
 import java.util.List;
 
+import static ru.practikum.kristinabogatova.utils.GlobalConst.CHROME;
+import static ru.practikum.kristinabogatova.utils.GlobalConst.FIREFOX;
+
 @RunWith(Parameterized.class)
 public class FaqTest {
 
-    private static final String CHROME = "chrome";
-    private static final String FIREFOX = "firefox";
-
-    private FaqPage faqPage;
+    private MainPage mainPage;
 
     @Parameterized.Parameter(0)
     public String browser;
@@ -58,15 +59,15 @@ public class FaqTest {
     @Before
     public void setUp() {
         // передаём браузер строкой
-        faqPage = new FaqPage(browser);
-        faqPage.openHomePage();
-        faqPage.acceptCookies();
+        mainPage = new MainPage(WebDriverUtils.create(browser));
+        mainPage.openHomePage();
+        mainPage.acceptCookies();
     }
 
     @Test
     public void faqAnswerShouldBeCorrect() {
-        faqPage.openFaqItem(questionIndex);
-        String actualAnswer = faqPage.getFaqAnswer(questionIndex);
+        mainPage.openFaqItem(questionIndex);
+        String actualAnswer = mainPage.getFaqAnswer(questionIndex);
         String expectedAnswer = EXPECTED_ANSWERS[questionIndex];
 
         Assert.assertEquals(
@@ -78,6 +79,6 @@ public class FaqTest {
 
     @After
     public void tearDown() {
-        faqPage.close();
+        mainPage.close();
     }
 }

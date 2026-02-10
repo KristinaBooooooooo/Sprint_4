@@ -6,14 +6,9 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
 
-public class OrderPage extends MainPage {
+public class OrderPage {
 
     private static final String BLACK = "black";
-
-    // Открываем главную
-    private final By topOrderButton = By.xpath("//div[contains(@class,'Header_Nav')]//button[text()='Заказать']");
-    private final By bottomOrderButton = By.xpath("//div[contains(@class,'Home_FinishButton')]//button[text()='Заказать']");
-    private final By orderHeader = By.xpath("//div[contains(@class,'Order_Header')]");
 
     // Первый шаг
     private final By nameField = By.xpath("//input[@placeholder='* Имя']");
@@ -22,6 +17,8 @@ public class OrderPage extends MainPage {
     private final By metroField = By.xpath("//input[@placeholder='* Станция метро']");
     private final By phoneField = By.xpath("//input[@placeholder='* Телефон: на него позвонит курьер']");
     private final By nextButton = By.xpath("//button[text()='Далее']");
+    private final By selectSearchDiv = By.xpath("//div[@class='select-search__select']");
+    private final By selectSearchButton = By.xpath("//button[contains(@class,'select-search__option')]");
 
     // Второй шаг
     private final By dateField = By.xpath("//input[@placeholder='* Когда привезти самокат']");
@@ -36,26 +33,12 @@ public class OrderPage extends MainPage {
     private final By confirmButton = By.xpath("//div[@class='Order_Modal__YZ-d3']//button[text()='Да']");
     private final By successModal = By.xpath("//div[contains(@class,'Order_ModalHeader')]");
 
-    public OrderPage(String browser) {
-        super(browser, Duration.ofSeconds(15));
-    }
+    private final WebDriver driver;
+    private final WebDriverWait wait;
 
-    // Кнопки заказа
-    public void clickTopOrderButton() {
-        acceptCookies();
-        WebElement button = driver.findElement(topOrderButton);
-        wait.until(ExpectedConditions.elementToBeClickable(button));
-        button.click();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(orderHeader));
-    }
-
-    public void clickBottomOrderButton() {
-        acceptCookies();
-        WebElement button = driver.findElement(bottomOrderButton);
-        scrollToElement(button);
-        wait.until(ExpectedConditions.elementToBeClickable(button));
-        button.click();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(orderHeader));
+    public OrderPage(WebDriver webDriver) {
+        this.driver = webDriver;
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(15));
     }
 
     // Первый шаг
@@ -68,10 +51,8 @@ public class OrderPage extends MainPage {
 
         // Выбор станции метро
         driver.findElement(metroField).click();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//div[@class='select-search__select']")
-        ));
-        driver.findElement(By.xpath("//button[contains(@class,'select-search__option')]")).click();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(selectSearchDiv));
+        driver.findElement(selectSearchButton).click();
 
         driver.findElement(phoneField).sendKeys(phone);
 
@@ -79,6 +60,11 @@ public class OrderPage extends MainPage {
         scrollToElement(nextBtn);
         wait.until(ExpectedConditions.elementToBeClickable(nextBtn));
         nextBtn.click();
+    }
+
+    // Метод для скролла
+    public void scrollToElement(WebElement element) {
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'});", element);
     }
 
     public boolean isSecondStepOpened() {
@@ -95,8 +81,7 @@ public class OrderPage extends MainPage {
 
         driver.findElement(rentPeriod).click();
         WebElement rentOption = driver.findElement(
-                By.xpath("//div[contains(@class,'Dropdown-option') and text()='" + rentPeriodText + "']")
-        );
+                By.xpath("//div[contains(@class,'Dropdown-option') and text()='" + rentPeriodText + "']"));
         rentOption.click();
 
         if (BLACK.equals(color)) {
@@ -125,5 +110,11 @@ public class OrderPage extends MainPage {
         WebElement successElement = shortWait.until(ExpectedConditions.visibilityOfElementLocated(successModal));
         String modalText = successElement.getText();
         return modalText.contains("Заказ оформлен") || modalText.contains("Номер заказа");
+    }
+
+    public void close() {
+        if (driver != null) {
+            driver.quit();
+        }
     }
 }

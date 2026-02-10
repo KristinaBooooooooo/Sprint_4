@@ -1,21 +1,25 @@
-package tests;
+package ru.practikum.kristinabogatova;
 
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import ru.practikum.kristinabogatova.pageobject.MainPage;
 import ru.practikum.kristinabogatova.pageobject.OrderPage;
+import ru.practikum.kristinabogatova.utils.WebDriverUtils;
 
 import java.util.Collection;
 import java.util.List;
 
+import static ru.practikum.kristinabogatova.utils.GlobalConst.CHROME;
+import static ru.practikum.kristinabogatova.utils.GlobalConst.FIREFOX;
+
 @RunWith(Parameterized.class)
 public class OrderTest {
 
-    private static final String CHROME = "chrome";
-    private static final String FIREFOX = "firefox";
     private static final String TOP = "top";
     private static final String BOTTOM = "bottom";
 
+    private MainPage mainPage;
     private OrderPage orderPage;
 
     @Parameterized.Parameter(0) public String browser;
@@ -37,7 +41,8 @@ public class OrderTest {
                         "Анна",
                         "Иванова",
                         "Москва, ул. Тверская, д. 10",
-                        "+79990001122", "10.02.2026",
+                        "+79990001122",
+                        "10.02.2026",
                         "сутки",
                         TOP,
                         "black",
@@ -47,7 +52,8 @@ public class OrderTest {
                         FIREFOX,
                         "Иван",
                         "Петров",
-                        "Санкт-Петербург, Невский проспект, д. 20", "+79990003344",
+                        "Санкт-Петербург, Невский проспект, д. 20",
+                        "+79990003344",
                         "11.02.2026",
                         "двое суток",
                         BOTTOM,
@@ -60,18 +66,18 @@ public class OrderTest {
     @Before
     public void setUp() {
         // передаём браузер строкой
-        orderPage = new OrderPage(browser);
-        orderPage.openHomePage();
-        orderPage.acceptCookies();
+        mainPage = new MainPage(WebDriverUtils.create(browser));
+        mainPage.openHomePage();
+        mainPage.acceptCookies();
     }
 
     @Test
     public void orderShouldBeCreatedSuccessfully() {
         //  Шаг 1: выбираем кнопку заказа
         if (TOP.equals(buttonType)) {
-            orderPage.clickTopOrderButton();
+            orderPage = mainPage.clickTopOrderButton();
         } else {
-            orderPage.clickBottomOrderButton();
+            orderPage = mainPage.clickBottomOrderButton();
         }
 
         // Шаг 2: Заполняем первый шаг заказа
@@ -88,5 +94,6 @@ public class OrderTest {
     @After
     public void tearDown() {
         orderPage.close();
+        mainPage.close();
     }
 }
